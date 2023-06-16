@@ -2,44 +2,69 @@
 title: "RESP protocol spec"
 linkTitle: "Protocol spec"
 weight: 4
-description: Redis serialization protocol (RESP) specification
+description: Redis serialization protocol (RESP) specification  Redis序列化协议规范
 aliases:
     - /topics/protocol
 ---
 
-Redis clients use a protocol called **RESP** (REdis Serialization Protocol) to communicate with the Redis server. While the protocol was designed specifically for Redis, it can be used for other client-server software projects.
+Redis clients use a protocol called **RESP** (REdis Serialization Protocol) to communicate with the Redis server. 
+While the protocol was designed specifically for Redis, it can be used for other client-server software projects.
+Redis客户端使用名为RESP（Redis序列化协议）的协议与Redis服务器通信。
+虽然本协议是专门为Redis设计的，但它可以用于其他客户端-服务器的软件项目。
 
 RESP is a compromise between the following things:
+RESP是以下内容之间的折衷方案：
 
-* Simple to implement.
-* Fast to parse.
-* Human readable.
+* Simple to implement. 易于实现
+* Fast to parse. 快速解析
+* Human readable. 可读性强
 
-RESP can serialize different data types like integers, strings, and arrays. There is also a specific type for errors. Requests are sent from the client to the Redis server as arrays of strings that represent the arguments of the command to execute. Redis replies with a command-specific data type.
+RESP can serialize different data types like integers, strings, and arrays. There is also a specific type for errors. 
+Requests are sent from the client to the Redis server as arrays of strings that represent the arguments of the command to execute. 
+Redis replies with a command-specific data type.
+RESP可以序列化不同的数据类型，如整数、字符串和数组。还有一种特定类型的错误。
+请求以字符串数组的形式从客户端发送到Redis服务器，这些字符串表示要执行的命令的参数。
+Redis使用特定于命令的数据类型进行回复。
 
-RESP is binary-safe and does not require processing of bulk data transferred from one process to another because it uses prefixed-length to transfer bulk data.
+RESP is binary-safe and does not require processing of bulk data transferred from one process to another 
+because it uses prefixed-length to transfer bulk data.
+RESP是二进制安全的，它使用前缀长度来传输大容量数据。
 
-Note: the protocol outlined here is only used for client-server communication. Redis Cluster uses a different binary protocol in order to exchange messages between nodes.
+Note: the protocol outlined here is only used for client-server communication. 
+Redis Cluster uses a different binary protocol in order to exchange messages between nodes.
+注意：本协议仅用于客户端-服务器通信。
 
-## Network layer
+## Network layer  网络层
 
 A client connects to a Redis server by creating a TCP connection to the port 6379.
+客户端通过创建TCP连接来连接到Redis服务器。
 
-While RESP is technically non-TCP specific, the protocol is only used with TCP connections (or equivalent stream-oriented connections like Unix sockets) in the context of Redis.
+While RESP is technically non-TCP specific, the protocol is only used with TCP connections 
+(or equivalent stream-oriented connections like Unix sockets) in the context of Redis.
+虽然RESP在技术上是非TCP特定的，但在Redis的上下文中，本协议仅与TCP连接（或类似Unix套接字的面向流的等效连接）一起使用。
 
-## Request-Response model
+## Request-Response model  请求-响应模型
 
 Redis accepts commands composed of different arguments.
 Once a command is received, it is processed and a reply is sent back to the client.
+Redis接收由不同参数组成的命令。一旦接收到命令，就会对其进行处理，并将回复发送回客户端。
 
 This is the simplest model possible; however, there are two exceptions:
+这是最简单的模型；但是，有两个例外：
 
-* Redis supports pipelining (covered later in this document). So it is possible for clients to send multiple commands at once and wait for replies later.
-* When a Redis client subscribes to a Pub/Sub channel, the protocol changes semantics and becomes a *push* protocol. The client no longer requires sending commands because the server will automatically send new messages to the client (for the channels the client is subscribed to) as soon as they are received.
+* Redis supports pipelining (covered later in this document). 
+  So it is possible for clients to send multiple commands at once and wait for replies later.
+  Redis支持流水线（本文稍后将介绍）。因此，客户端可以同时发送多个命令，然后等待稍后的回复。
+* When a Redis client subscribes to a Pub/Sub channel, the protocol changes semantics and becomes a *push* protocol. 
+  The client no longer requires sending commands because the server will automatically send new messages to the client 
+  (for the channels the client is subscribed to) as soon as they are received.
+  当Redis客户端订阅Pub/Sub通道时，该协议会更改语义并成为推送协议。
+  客户端不再需要发送命令，因为服务器将在收到新消息后立即自动向客户端发送新消息（针对客户端订阅的频道）。
 
 Excluding these two exceptions, the Redis protocol is a simple request-response protocol.
+排除这两个例外，Redis协议是一个简单的请求-响应协议。
 
-## RESP protocol description
+## RESP protocol description  RESP协议描述
 
 The RESP protocol was introduced in Redis 1.2, but it became the
 standard way for talking with the Redis server in Redis 2.0.
